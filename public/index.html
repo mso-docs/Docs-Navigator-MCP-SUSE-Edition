@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUSE Docs Navigator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0c322c;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #0c322c 0%, #30ba78 100%);
+            padding: 40px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        .geeko-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        .status-bar {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #30ba78;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.offline {
+            background: #ef4444;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .main-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #6b7280;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #30ba78;
+            border-bottom-color: #30ba78;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #30ba78;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #30ba78 0%, #0c322c 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(48, 186, 120, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(48, 186, 120, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 10px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .result-item {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #30ba78;
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .result-source {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-bottom: 10px;
+        }
+
+        .result-content {
+            color: #374151;
+            line-height: 1.6;
+        }
+
+        .result-url {
+            margin-top: 10px;
+            font-size: 0.85rem;
+        }
+
+        .result-url a {
+            color: #30ba78;
+            text-decoration: none;
+        }
+
+        .result-url a:hover {
+            text-decoration: underline;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e5e7eb;
+            border-top-color: #30ba78;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .source-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .source-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s;
+        }
+
+        .source-card:hover {
+            border-color: #30ba78;
+            box-shadow: 0 4px 12px rgba(48, 186, 120, 0.15);
+        }
+
+        .source-card h3 {
+            color: #0c322c;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .source-card p {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .source-card .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .source-card .status-badge.indexed {
+            background: #d1f4e0;
+            color: #0c322c;
+        }
+
+        .source-card .status-badge.not-indexed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .answer-section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 4px solid #30ba78;
+            margin-top: 20px;
+        }
+
+        .answer-section h3 {
+            color: #1f2937;
+            margin-bottom: 15px;
+        }
+
+        .answer-text {
+            color: #374151;
+            line-height: 1.8;
+        }
+
+        .answer-text a,
+        .result-content a {
+            color: #30ba78;
+            text-decoration: underline;
+            font-weight: 500;
+        }
+
+        .answer-text a:hover,
+        .result-content a:hover {
+            color: #0c322c;
+        }
+
+        .sources-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        .sources-section h4 {
+            color: #6b7280;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .info-box {
+            background: #d1f4e0;
+            color: #0c322c;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #30ba78;
+        }
+
+        .info-box h3 {
+            margin-bottom: 10px;
+            color: #0c322c;
+        }
+
+        .info-box a {
+            color: #0c322c;
+            font-weight: 600;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .info-box li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="geeko-icon">🦎</div>
+            <h1>SUSE Docs Navigator</h1>
+            <p>AI-Powered Documentation Search & Q&A</p>
+        </header>
+
+        <div class="status-bar">
+            <div class="status-indicator">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Checking connection...</span>
+            </div>
+            <div>
+                <span id="providerInfo"></span>
+            </div>
+        </div>
+
+        <div class="main-card">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('search', event)">🔍 Search</button>
+                <button class="tab" onclick="switchTab('ask', event)">💬 Ask Question</button>
+                <button class="tab" onclick="switchTab('summarize', event)">📝 Summarize</button>
+                <button class="tab" onclick="switchTab('sources', event)">📚 Sources</button>
+            </div>
+
+            <!-- Search Tab -->
+            <div id="search" class="tab-content active">
+                <div class="input-group">
+                    <label for="searchQuery">Search Documentation</label>
+                    <input type="text" id="searchQuery" placeholder="e.g., How do I install K3s on SUSE?" onkeypress="if(event.key==='Enter') performSearch()">
+                </div>
+                <div class="input-group">
+                    <label for="searchSource">Source</label>
+                    <select id="searchSource">
+                        <option value="all">All Sources</option>
+                        <option value="suse">SUSE</option>
+                        <option value="rancher">Rancher</option>
+                        <option value="k3s">K3s</option>
+                    </select>
+                </div>
+                <button onclick="performSearch()">Search</button>
+                <div id="searchResults">
+                    <div class="info-box">
+                        <h3>🚀 First Time Using?</h3>
+                        <p>Before you can search, you need to index the documentation:</p>
+                        <ol style="margin-left: 20px; margin-top: 10px;">
+                            <li>Go to the <strong>Sources</strong> tab</li>
+                            <li>Click <strong>"Index Documentation"</strong></li>
+                            <li>Select a source (K3s is fastest for testing)</li>
+                            <li>Wait a few minutes for indexing to complete</li>
+                            <li>Come back here and search!</li>
+                        </ol>
+                        <p style="margin-top: 15px;">
+                            <a href="#" onclick="switchTab('sources'); return false;" style="color: #1e40af; font-weight: 600;">
+                                → Go to Sources Tab to Start
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ask Tab -->
+            <div id="ask" class="tab-content">
+                <div class="input-group">
+                    <label for="question">Ask a Question</label>
+                    <textarea id="question" placeholder="e.g., What are the differences between K3s and RKE2?" onkeypress="if(event.key==='Enter' && !event.shiftKey) { event.preventDefault(); askQuestion(); }"></textarea>
+                </div>
+                <div class="input-group">
+                    <label for="context">Additional Context (Optional)</label>
+                    <input type="text" id="context" placeholder="e.g., deployment on production environment">
+                </div>
+                <button onclick="askQuestion()">Get Answer</button>
+                <div id="askResults"></div>
+            </div>
+
+            <!-- Summarize Tab -->
+            <div id="summarize" class="tab-content">
+                <div class="input-group">
+                    <label for="docUrl">Documentation URL</label>
+                    <input type="text" id="docUrl" placeholder="https://docs.k3s.io/installation" onkeypress="if(event.key==='Enter') summarizeDoc()">
+                </div>
+                <div class="input-group">
+                    <label for="summaryFormat">Summary Format</label>
+                    <select id="summaryFormat">
+                        <option value="brief">Brief</option>
+                        <option value="detailed">Detailed</option>
+                        <option value="bullet-points">Bullet Points</option>
+                    </select>
+                </div>
+                <button onclick="summarizeDoc()">Summarize</button>
+                <div id="summarizeResults"></div>
+            </div>
+
+            <!-- Sources Tab -->
+            <div id="sources" class="tab-content">
+                <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+                    <button onclick="loadSources()">Refresh Sources</button>
+                    <button onclick="showIndexModal()">Index Documentation</button>
+                </div>
+                <div id="sourcesList" class="source-list"></div>
+            </div>
+        </div>
+
+        <!-- Index Modal -->
+        <div id="indexModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(12, 50, 44, 0.8); z-index: 1000; align-items: center; justify-content: center;">
+            <div style="background: white; padding: 30px; border-radius: 15px; max-width: 500px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+                <h2 style="margin-bottom: 20px; color: #0c322c;">🦎 Index Documentation</h2>
+                <p style="margin-bottom: 20px; color: #6b7280;">This will fetch and index documentation for searching. It may take a few minutes.</p>
+                <div class="input-group">
+                    <label for="indexSource">Select Source</label>
+                    <select id="indexSource">
+                        <option value="suse">SUSE Documentation</option>
+                        <option value="rancher">Rancher Documentation</option>
+                        <option value="k3s">K3s Documentation (Fastest)</option>
+                        <option value="all">All Sources</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button onclick="startIndexing()">Start Indexing</button>
+                    <button onclick="closeIndexModal()" style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check health status
+        async function checkHealth() {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('statusText');
+                const providerInfo = document.getElementById('providerInfo');
+                
+                if (data.status === 'ok' && data.aiService === 'available') {
+                    statusDot.classList.remove('offline');
+                    statusText.textContent = 'Connected';
+                    providerInfo.textContent = `Provider: ${data.provider}`;
+                } else {
+                    statusDot.classList.add('offline');
+                    statusText.textContent = 'AI Service Unavailable';
+                    providerInfo.textContent = 'Please check configuration';
+                }
+            } catch (error) {
+                document.getElementById('statusDot').classList.add('offline');
+                document.getElementById('statusText').textContent = 'Connection Failed';
+            }
+        }
+
+        // Switch tabs
+        function switchTab(tabName, evt) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // If called from a tab button, highlight it
+            if (evt && evt.target) {
+                evt.target.classList.add('active');
+            } else {
+                // Find and activate the tab button by matching text
+                document.querySelectorAll('.tab').forEach(tab => {
+                    if (tab.textContent.toLowerCase().includes(tabName)) {
+                        tab.classList.add('active');
+                    }
+                });
+            }
+            
+            document.getElementById(tabName).classList.add('active');
+            
+            if (tabName === 'sources') {
+                loadSources();
+            }
+        }
+
+        // Search documentation
+        async function performSearch() {
+            const query = document.getElementById('searchQuery').value;
+            const source = document.getElementById('searchSource').value;
+            const resultsDiv = document.getElementById('searchResults');
+            
+            if (!query) {
+                resultsDiv.innerHTML = '<div class="error">Please enter a search query</div>';
+                return;
+            }
+            
+            resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Searching...</p></div>';
+            
+            try {
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query, source, limit: 5 })
+                });
+                
+                const data = await response.json();
+                
+                if (data.results && data.results.length > 0) {
+                    resultsDiv.innerHTML = '<div class="results">' + 
+                        data.results.map(result => {
+                            // Convert markdown-style links to HTML links
+                            let content = result.content.substring(0, 400);
+                            content = content.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+                            // Make URLs clickable
+                            content = content.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank">$1</a>');
+                            
+                            return `
+                            <div class="result-item">
+                                <div class="result-title">${result.metadata.title}</div>
+                                <div class="result-source">
+                                    Source: <strong>${result.metadata.source.toUpperCase()}</strong>
+                                    ${result.metadata.score ? ` | Relevance: ${(result.metadata.score * 100).toFixed(1)}%` : ''}
+                                </div>
+                                <div class="result-content">${content}${result.content.length > 400 ? '...' : ''}</div>
+                                <div class="result-url">
+                                    <a href="${result.metadata.url}" target="_blank" style="font-weight: 600;">
+                                        📄 View Full Documentation →
+                                    </a>
+                                </div>
+                            </div>
+                        `}).join('') + '</div>';
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="error">
+                            <strong>No results found.</strong><br>
+                            The documentation may not be indexed yet. 
+                            Go to the <a href="#" onclick="switchTab('sources'); return false;" style="color: #991b1b; text-decoration: underline;">Sources</a> tab to index documentation first.
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Ask question
+        async function askQuestion() {
+            const question = document.getElementById('question').value;
+            const context = document.getElementById('context').value;
+            const resultsDiv = document.getElementById('askResults');
+            
+            if (!question) {
+                resultsDiv.innerHTML = '<div class="error">Please enter a question</div>';
+                return;
+            }
+            
+            resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Thinking...</p></div>';
+            
+            try {
+                const response = await fetch('/api/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question, context })
+                });
+                
+                const data = await response.json();
+                
+                // Make links in the answer clickable
+                let answer = data.answer;
+                answer = answer.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+                answer = answer.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank">$1</a>');
+                // Convert line breaks to <br>
+                answer = answer.replace(/\n/g, '<br>');
+                
+                resultsDiv.innerHTML = `
+                    <div class="answer-section">
+                        <h3>💡 Answer</h3>
+                        <div class="answer-text">${answer}</div>
+                        ${data.sources && data.sources.length > 0 ? `
+                            <div class="sources-section">
+                                <h4>📚 Sources Referenced:</h4>
+                                ${data.sources.map((source, idx) => `
+                                    <div class="result-item">
+                                        <div class="result-title">[${idx + 1}] ${source.metadata.title}</div>
+                                        <div class="result-source">Source: <strong>${source.metadata.source.toUpperCase()}</strong></div>
+                                        <div class="result-url">
+                                            <a href="${source.metadata.url}" target="_blank" style="font-weight: 600;">
+                                                📄 View Source Documentation →
+                                            </a>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Summarize documentation
+        async function summarizeDoc() {
+            const url = document.getElementById('docUrl').value;
+            const format = document.getElementById('summaryFormat').value;
+            const resultsDiv = document.getElementById('summarizeResults');
+            
+            if (!url) {
+                resultsDiv.innerHTML = '<div class="error">Please enter a URL</div>';
+                return;
+            }
+            
+            resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Summarizing...</p></div>';
+            
+            try {
+                const response = await fetch('/api/summarize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url, format })
+                });
+                
+                const data = await response.json();
+                
+                // Make links in the summary clickable
+                let summary = data.summary;
+                summary = summary.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+                summary = summary.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank">$1</a>');
+                summary = summary.replace(/\n/g, '<br>');
+                
+                resultsDiv.innerHTML = `
+                    <div class="answer-section">
+                        <h3>📝 Summary</h3>
+                        <div class="answer-text">${summary}</div>
+                        <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
+                            <a href="${url}" target="_blank" style="color: #667eea; font-weight: 600;">
+                                📄 View Original Documentation →
+                            </a>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Load sources
+        async function loadSources() {
+            const sourcesDiv = document.getElementById('sourcesList');
+            sourcesDiv.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+            
+            try {
+                const response = await fetch('/api/sources');
+                const data = await response.json();
+                
+                sourcesDiv.innerHTML = data.sources.map(source => `
+                    <div class="source-card">
+                        <h3>${source.name}</h3>
+                        <p><strong>URL:</strong> <a href="${source.baseUrl}" target="_blank">${source.baseUrl}</a></p>
+                        <p><strong>Status:</strong> ${source.status}</p>
+                        ${source.documentCount ? `<p><strong>Documents:</strong> ${source.documentCount}</p>` : '<p style="color: #ef4444;">Not indexed yet</p>'}
+                    </div>
+                `).join('');
+            } catch (error) {
+                sourcesDiv.innerHTML = `<div class="error">Error loading sources: ${error.message}</div>`;
+            }
+        }
+
+        // Show index modal
+        function showIndexModal() {
+            document.getElementById('indexModal').style.display = 'flex';
+        }
+
+        // Close index modal
+        function closeIndexModal() {
+            document.getElementById('indexModal').style.display = 'none';
+        }
+
+        // Start indexing
+        async function startIndexing() {
+            const source = document.getElementById('indexSource').value;
+            closeIndexModal();
+            
+            const sourcesDiv = document.getElementById('sourcesList');
+            sourcesDiv.innerHTML = `
+                <div class="success">
+                    <h3>Indexing Started!</h3>
+                    <p>Indexing ${source === 'all' ? 'all sources' : source}...</p>
+                    <p>This may take a few minutes. You can continue using the interface.</p>
+                    <div style="margin-top: 15px;">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch('/api/index', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ source, forceRefresh: false })
+                });
+                
+                const data = await response.json();
+                
+                setTimeout(() => {
+                    sourcesDiv.innerHTML = `
+                        <div class="success">
+                            <h3>Indexing In Progress</h3>
+                            <p>${data.message}</p>
+                            <p>Check back in a few minutes and refresh the sources list.</p>
+                        </div>
+                    `;
+                }, 2000);
+            } catch (error) {
+                sourcesDiv.innerHTML = `<div class="error">Error starting indexing: ${error.message}</div>`;
+            }
+        }
+
+        // Initialize
+        checkHealth();
+        setInterval(checkHealth, 30000); // Check every 30 seconds
+    </script>
+</body>
+</html>
