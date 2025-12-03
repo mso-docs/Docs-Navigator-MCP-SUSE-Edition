@@ -1,0 +1,35 @@
+{
+  "name": "docs-navigator-mcp-suse",
+  "version": "1.0.0",
+  "description": "MCP server for navigating SUSE documentation with open-source AI models",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "web": "node src/web-server.js",
+    "test": "node src/test.js",
+    "index": "node src/index-docs.js"
+  },
+  "keywords": [
+    "mcp",
+    "suse",
+    "documentation",
+    "ai",
+    "ollama",
+    "llm"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0",
+    "axios": "^1.6.2",
+    "cheerio": "^1.0.0-rc.12",
+    "dotenv": "^16.3.1",
+    "express": "^4.22.1",
+    "ollama": "^0.5.0",
+    "openai": "^4.20.1",
+    "pdf-parse": "^1.1.1",
+    "turndown": "^7.1.2",
+    "vectra": "^0.5.0"
+  }
+}
