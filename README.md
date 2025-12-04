@@ -137,6 +137,20 @@ npm start
 # The server communicates via stdio using MCP protocol
 ```
 
+### Indexing and Testing
+
+```bash
+# Index a single documentation source
+node src/index-docs.js k3s
+
+# Index multiple sources at once
+node src/index-multi.js k3s rancher
+node src/index-multi.js all  # Index all available sources
+
+# Test different batch sizes to find optimal performance
+node src/test-batch-sizes.js k3s
+```
+
 ## 🏗️ Architecture
 
 ```
