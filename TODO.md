@@ -85,3 +85,4 @@
 - [ ] Generate cache analytics reports.
 - [ ] Support concurrent indexing jobs safely.
 
+UI appears to be saying things that are skipped over in the caching are not cached, so none of the sorces look like they cache, but they actually do and you can talk to the assistant and ask it questions about everything and it responds and gives the proper citations -1:34 AM bug found going to bed haha
