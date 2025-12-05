@@ -7,8 +7,18 @@
   "scripts": {
     "start": "node src/index.js",
     "web": "node src/web-server.js",
-    "test": "node src/test.js",
-    "index": "node src/index-docs.js"
+    "test": "node src/tests/test.js",
+    "index": "node src/cli/index-docs.js",
+    "stats": "node src/cli/index-docs.js --stats",
+    "clear-cache": "node src/cli/index-docs.js --clear-cache all",
+    "validate": "node src/cli/index-docs.js --validate-cache",
+    "rebuild": "node src/cli/index-docs.js --rebuild-source",
+    "fix-sources": "node src/utils/fix-cache-sources.js",
+    "mark-indexed": "node src/utils/mark-indexed.js",
+    "migrate-sqlite": "node src/utils/migrate-to-sqlite.js",
+    "analytics": "node src/cli/cache-analytics.js",
+    "query-cache": "node src/cli/query-cache.js",
+    "clear-locks": "node src/cli/clear-locks.js"
   },
   "keywords": [
     "mcp",
@@ -23,6 +33,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.5.0",
     "axios": "^1.6.2",
+    "better-sqlite3": "^12.5.0",
     "cheerio": "^1.0.0-rc.12",
     "dotenv": "^16.3.1",
     "express": "^4.22.1",

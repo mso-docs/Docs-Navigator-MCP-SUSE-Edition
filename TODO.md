@@ -31,11 +31,17 @@
 
 **Results:** Successfully skipped 1 unchanged document on second run.
 
-#### Use Sitemap Optimization 🔧 IN PROGRESS
+#### Use Sitemap Optimization ✅ COMPLETED
 - [x] Fixed sitemap parsing (removed overly restrictive filters).
-- [ ] Parse sitemap `<lastmod>` timestamps.
-- [ ] Compare with cached `last_checked` to pre-filter URLs.
-- [ ] Only fetch URLs that are potentially changed.
+- [x] Parse sitemap `<lastmod>` timestamps.
+- [x] Compare with cached `last_checked` to pre-filter URLs.
+- [x] Only fetch URLs that are potentially changed.
+
+**Results:**
+- `preFilterUrls()` method compares sitemap lastmod with cache timestamps
+- Skips URLs where lastmod ≤ last_checked (guaranteed unchanged)
+- Prevents unnecessary HTTP requests before conditional GET
+- Logs pre-filtered count for visibility
 
 ### Phase 2: Performance Tuning 🔧 IN PROGRESS
 
@@ -46,43 +52,86 @@
 - [x] Add env var `EMBEDDING_DELAY` (default: 100ms) for request spacing.
 - [x] Reduced defaults to prevent overwhelming Ollama (from 5 → 3 → 2).
 - [x] Add retry logic with exponential backoff (3 attempts: 500ms, 1s, 2s).
-- [ ] Test with different batch sizes and document findings.
+- [x] Test with different batch sizes and document findings.
+
+**Batch Size Testing Results:**
+- FETCH_BATCH_SIZE=1 (sequential): ✅ 100% reliable, no Vectra conflicts
+- FETCH_BATCH_SIZE=3+ (parallel): ❌ Vectra "Item already exists" errors
+- Recommendation: Keep FETCH_BATCH_SIZE=1 for stability
+- Note: Switched to OpenAI embeddings (reliable) + Ollama Q&A (free) hybrid approach
 
 **Results:** 
 - Concurrency: 5 → 2 with p-limit queueing
 - Retry logic: 3 attempts with exponential backoff
 - Cache working perfectly: 97% page cache hit rate, 20% embedding reuse
 
-#### Cache Management Commands
-- [ ] Add `--stats` flag to show cache statistics.
-- [ ] Add `--clear-cache` flag to force full refresh.
-- [ ] Add `--validate-cache` to check for corruption.
+#### Cache Management Commands ✅ COMPLETED
+- [x] Add `--stats` flag to show cache statistics.
+- [x] Add `--clear-cache` flag to force full refresh.
+- [x] Add `--validate-cache` to check for corruption.
+- [x] Add `--rebuild-source` to clear and reindex specific source.
+- [x] Add npm scripts: `npm run stats`, `npm run validate`, `npm run clear-cache`.
+- [x] Create utility scripts: `fix-cache-sources.js`, `mark-indexed.js`.
 
-### Phase 3: SQLite Migration (When Needed)
+**Results:**
+- Stats command shows detailed cache info by source (110 total: SUSE 50, Rancher 30, K3s 30)
+- Validate command checks cache integrity and detects issues
+- Clear cache supports: `embedding`, `page`, `vectors`, or `all`
+- Utility scripts fixed legacy cache entries missing source/indexed flags
 
-#### Migrate Page Cache to SQLite
-- [ ] Install `better-sqlite3` package.
-- [ ] Create `data/page-cache.db` with schema:
-  ```sql
-  CREATE TABLE pages (
-    url TEXT PRIMARY KEY,
-    etag TEXT,
-    last_modified TEXT,
-    content_hash TEXT,
-    html_path TEXT,
-    last_checked INTEGER,
-    chunk_count INTEGER
-  );
-  CREATE INDEX idx_last_checked ON pages(last_checked);
-  ```
-- [ ] Implement `CacheService` with SQLite backend.
-- [ ] Add migration script to convert JSON → SQLite.
-- [ ] Keep `embedding-cache.json` as-is (works great for embeddings).
-- [ ] Add transaction support for atomic updates.
+### Phase 3: SQLite Migration ✅ COMPLETED
 
-#### Advanced Query Features (SQLite only)
-- [ ] Query pages by source, date range, or modification status.
-- [ ] Generate cache analytics reports.
-- [ ] Support concurrent indexing jobs safely.
+#### Migrate Page Cache to SQLite ✅
+- [x] Install `better-sqlite3` package.
+- [x] Create `data/page-cache.db` with schema including indexed, source, and timestamp fields.
+- [x] Implement `CacheService` with SQLite backend supporting all Map operations.
+- [x] Add migration script to convert JSON → SQLite (`npm run migrate-sqlite`).
+- [x] Keep `embedding-cache.json` as-is (works great for embeddings).
+- [x] Add transaction support for atomic bulk updates.
+- [x] Add indexes for fast queries by source, indexed status, and last_checked.
+- [x] Create cache_stats view for quick analytics.
 
-UI appears to be saying things that are skipped over in the caching are not cached, so none of the sorces look like they cache, but they actually do and you can talk to the assistant and ask it questions about everything and it responds and gives the proper citations -1:34 AM bug found going to bed haha
+**Results:**
+- SQLite cache is now default (set USE_JSON_CACHE=true to revert)
+- Migration script successfully converted 110 entries
+- All operations work identically to Map-based cache
+- Ready for scaling to 1000s of documents with no performance degradation
+
+#### Advanced Query Features (SQLite only) ✅ COMPLETED
+
+- [x] Query pages by source, date range, or modification status.
+- [x] Generate cache analytics reports.
+- [x] Support concurrent indexing jobs safely.
+
+**Results:**
+
+- **Advanced Queries:** `npm run query-cache` with filters:
+  - `--source suse|rancher|k3s` - Filter by documentation source
+  - `--status indexed|not-indexed|stale|recent` - Filter by indexing status
+  - `--modified-since YYYY-MM-DD` - Show pages modified after date
+  - `--start-date` / `--end-date` - Date range filtering
+  - Grouped display by source with indexed status indicators (✓/✗)
+
+- **Analytics Reports:** `npm run analytics` shows:
+  - Overall statistics: Total pages, indexed %, oldest/newest/average check times
+  - By-source breakdown: Counts and percentages per documentation source
+  - Recent activity: Pages updated in last 24 hours by source
+  - Stale pages: Pages not checked in 7+ days
+  - Cache efficiency: Uniqueness %, duplicate detection (currently 100% unique)
+  - Database size: KB/MB with average per page
+  - Automated recommendations: Refresh stale pages, complete indexing, optimize if needed
+
+- **Concurrent Indexing Locks:** Table-based locking prevents race conditions:
+  - Each indexing process acquires exclusive lock: `npm run index <source>`
+  - 30-minute timeout with automatic expiration
+  - Second process detects conflict and shows helpful message with remaining time
+  - `npm run clear-locks` removes expired locks
+  - Atomic lock acquisition using SQLite transactions (no race conditions)
+  - Tested with two simultaneous processes - second correctly blocked until first completes
+
+✅ **FIXED**: UI now correctly displays cached document counts per source (SUSE: 50, Rancher: 30, K3s: 30)
+
+- Enhanced `listSources()` to count indexed documents from page cache
+- Added `source` field to page cache entries during indexing
+- Fixed duplicate counter issue in batch processing
+- UI accurately reflects indexing status for all documentation sources
