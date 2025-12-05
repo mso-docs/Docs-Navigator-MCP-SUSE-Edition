@@ -9,6 +9,7 @@ An **AI-powered documentation navigator** built as a Model Context Protocol (MCP
 - [Architecture Overview](docs/ARCHITECTURE.md) - System design and components
 - [Installation Guide](docs/INSTALL.md) - Detailed setup instructions
 - [Documentation Sources](docs/SOURCES.md) - All available sources and usage guide
+- [Indexing Guide](docs/INDEXING_GUIDE.md) - Understanding caching vs indexing ⭐
 - [Quick Reference](docs/QUICKREF.md) - Command reference
 - [Usage Examples](docs/EXAMPLES.md) - Common usage patterns
 - [Web GUI Guide](docs/WEB_GUI.md) - Web interface documentation

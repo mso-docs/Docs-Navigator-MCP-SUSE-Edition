@@ -632,6 +632,38 @@ export class DocumentationService {
           `${source.baseUrl}/installation`,
           `${source.baseUrl}/architecture`,
         ];
+      case 'rke2':
+        return [
+          `${source.baseUrl}/install/quickstart`,
+          `${source.baseUrl}/install/configuration`,
+          `${source.baseUrl}/architecture`,
+          `${source.baseUrl}/advanced`,
+        ];
+      case 'longhorn':
+        return [
+          `${source.baseUrl}/latest/`,
+          `${source.baseUrl}/latest/deploy/install/`,
+          `${source.baseUrl}/latest/concepts/`,
+          `${source.baseUrl}/latest/best-practices/`,
+        ];
+      case 'harvester':
+        return [
+          `${source.baseUrl}/v1.3/`,
+          `${source.baseUrl}/v1.3/install/requirements`,
+          `${source.baseUrl}/v1.3/vm/create-vm`,
+        ];
+      case 'neuvector':
+        return [
+          `${source.baseUrl}/basics/overview`,
+          `${source.baseUrl}/deploying/kubernetes`,
+          `${source.baseUrl}/navigation/multicluster`,
+        ];
+      case 'kubewarden':
+        return [
+          `${source.baseUrl}/quick-start`,
+          `${source.baseUrl}/writing-policies/`,
+          `${source.baseUrl}/operator-manual/`,
+        ];
       default:
         return [];
     }

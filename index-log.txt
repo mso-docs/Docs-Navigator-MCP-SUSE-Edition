@@ -1,0 +1,43 @@
+=========================================
+Indexing: suse
+=========================================
+
+> docs-navigator-mcp-suse@1.0.0 index
+> node src/cli/index-docs.js suse --force
+
+📦 Using SQLite cache
+
+🚀 Starting documentation indexing for: suse
+   Force refresh: Ignoring cache, fetching all documents
+This may take several minutes...
+
+📦 SQLite cache initialized: ./data/page-cache.db
+📦 Loaded 235 cached pages from SQLite
+⚠️  Another indexing process is already running for suse
+   Lock expires in 30 minutes
+   If this is incorrect, run: npm run clear-locks
+
+
+Completed: suse
+
+=========================================
+Indexing: rancher
+=========================================
+
+> docs-navigator-mcp-suse@1.0.0 index
+> node src/cli/index-docs.js rancher --force
+
+📦 Using SQLite cache
+
+🚀 Starting documentation indexing for: rancher
+   Force refresh: Ignoring cache, fetching all documents
+This may take several minutes...
+
+📦 SQLite cache initialized: ./data/page-cache.db
+📦 Loaded 235 cached pages from SQLite
+🔒 Acquired indexing lock: 40104-1764913739376
+
+Indexing 30 documents from Rancher Documentation (pre-filtered from 30)...
+📦 Loaded 196 cached embeddings from disk
+✓ Indexed (1/30): https://ranchermanager.docs.rancher.com/versions
+✓ Indexed (2/30): https://ranchermanager.docs.rancher.com/v2.10
