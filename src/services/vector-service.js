@@ -2,6 +2,7 @@ import { LocalIndex } from 'vectra';
 import { AIService } from './ai-service.js';
 import path from 'path';
 import fs from 'fs/promises';
+import pLimit from 'p-limit';
 
 export class VectorService {
   constructor() {
@@ -10,6 +11,12 @@ export class VectorService {
     this.aiService = new AIService();
     this.initialized = false;
     this.updateQueue = Promise.resolve();
+    // Limit concurrent embedding requests to avoid overwhelming Ollama
+    // Default to 2 for better stability with Ollama
+    this.embeddingConcurrency = parseInt(process.env.EMBEDDING_CONCURRENCY) || 2;
+    this.embeddingLimit = pLimit(this.embeddingConcurrency);
+    // Add delay between embedding requests (ms)
+    this.embeddingDelay = parseInt(process.env.EMBEDDING_DELAY) || 100;
   }
 
   async ensureInitialized() {
@@ -40,14 +47,18 @@ export class VectorService {
       await this.ensureInitialized();
 
       try {
-        // Split content into chunks for better retrieval - increased chunk size for fewer chunks
-        const chunks = this.splitIntoChunks(doc.content, 2000);
+        // Split content into chunks for better retrieval
+        // Reduced chunk size to 1500 to avoid Ollama connection issues with large texts
+        const chunkSize = parseInt(process.env.CHUNK_SIZE) || 1500;
+        const chunks = this.splitIntoChunks(doc.content, chunkSize);
 
         await this.index.beginUpdate();
 
         try {
-          // Generate all embeddings in parallel for this document
-          const embeddingPromises = chunks.map(chunk => this.aiService.generateEmbedding(chunk));
+          // Generate embeddings with controlled concurrency to avoid overwhelming Ollama
+          const embeddingPromises = chunks.map(chunk => 
+            this.embeddingLimit(() => this.aiService.generateEmbedding(chunk))
+          );
           const embeddings = await Promise.all(embeddingPromises);
 
           // Insert all chunks at once

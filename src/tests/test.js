@@ -5,9 +5,9 @@
  * This script demonstrates how to test individual components
  */
 
-import { AIService } from './services/ai-service.js';
-import { DocumentationService } from './services/documentation-service.js';
-import { VectorService } from './services/vector-service.js';
+import { AIService } from '../services/ai-service.js';
+import { DocumentationService } from '../services/documentation-service.js';
+import { VectorService } from '../services/vector-service.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
