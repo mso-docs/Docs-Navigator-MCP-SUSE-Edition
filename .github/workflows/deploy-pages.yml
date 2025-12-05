@@ -1,0 +1,177 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: ["main", "docs-additions"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create deployment directory
+        run: |
+          mkdir -p deploy
+          cp -r public/* deploy/
+          cp package.json deploy/
+          cp README.md deploy/
+
+      - name: Create static API mock for demo
+        run: |
+          mkdir -p deploy/api
+          cat > deploy/api/health.json << 'EOF'
+          {
+            "status": "ok",
+            "aiService": "demo",
+            "provider": "GitHub Pages Demo"
+          }
+          EOF
+          
+          cat > deploy/api/sources.json << 'EOF'
+          {
+            "sources": [
+              {
+                "id": "suse",
+                "name": "SUSE Documentation",
+                "baseUrl": "https://documentation.suse.com",
+                "status": "indexed",
+                "documentCount": 50
+              },
+              {
+                "id": "rancher",
+                "name": "Rancher Documentation",
+                "baseUrl": "https://ranchermanager.docs.rancher.com",
+                "status": "indexed",
+                "documentCount": 30
+              },
+              {
+                "id": "k3s",
+                "name": "K3s Documentation",
+                "baseUrl": "https://docs.k3s.io",
+                "status": "indexed",
+                "documentCount": 30
+              },
+              {
+                "id": "rke2",
+                "name": "RKE2 Documentation",
+                "baseUrl": "https://docs.rke2.io",
+                "status": "indexed",
+                "documentCount": 30
+              },
+              {
+                "id": "longhorn",
+                "name": "Longhorn Documentation",
+                "baseUrl": "https://longhorn.io/docs",
+                "status": "indexed",
+                "documentCount": 4
+              },
+              {
+                "id": "harvester",
+                "name": "Harvester Documentation",
+                "baseUrl": "https://docs.harvesterhci.io",
+                "status": "indexed",
+                "documentCount": 30
+              },
+              {
+                "id": "neuvector",
+                "name": "NeuVector Documentation",
+                "baseUrl": "https://open-docs.neuvector.com",
+                "status": "indexed",
+                "documentCount": 30
+              },
+              {
+                "id": "kubewarden",
+                "name": "Kubewarden Documentation",
+                "baseUrl": "https://docs.kubewarden.io",
+                "status": "indexed",
+                "documentCount": 30
+              }
+            ]
+          }
+          EOF
+
+      - name: Update index.html for GitHub Pages demo mode
+        run: |
+          cat > deploy/demo-notice.js << 'EOF'
+          // GitHub Pages Demo Mode
+          const originalFetch = window.fetch;
+          window.fetch = function(url, options) {
+            // Intercept API calls for demo mode
+            if (url.includes('/api/health')) {
+              return Promise.resolve(new Response(JSON.stringify({
+                status: 'ok',
+                aiService: 'demo',
+                provider: 'GitHub Pages Demo'
+              }), { headers: { 'Content-Type': 'application/json' } }));
+            }
+            if (url.includes('/api/sources')) {
+              return originalFetch('./api/sources.json');
+            }
+            if (url.includes('/api/search') || url.includes('/api/ask') || url.includes('/api/summarize')) {
+              return Promise.resolve(new Response(JSON.stringify({
+                message: 'This is a demo deployment. The full search functionality requires a backend server with AI integration. To use the full application, please clone the repository and run it locally.',
+                results: [],
+                demoMode: true
+              }), { headers: { 'Content-Type': 'application/json' } }));
+            }
+            if (url.includes('/api/index')) {
+              return Promise.resolve(new Response(JSON.stringify({
+                message: 'Demo mode: Indexing is not available in GitHub Pages deployment. This is a UI showcase only.',
+                demoMode: true
+              }), { headers: { 'Content-Type': 'application/json' } }));
+            }
+            return originalFetch(url, options);
+          };
+          
+          // Add demo banner
+          window.addEventListener('DOMContentLoaded', function() {
+            const banner = document.createElement('div');
+            banner.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #78350f; padding: 12px 20px; text-align: center; font-weight: 600; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
+            banner.innerHTML = '🎨 UI Demo Mode - <a href="https://github.com/mso-docs/Docs-Navigator-MCP-SUSE-Edition" style="color: #78350f; text-decoration: underline;">Clone the repo</a> for full functionality with AI search';
+            document.body.insertBefore(banner, document.body.firstChild);
+            document.body.style.paddingTop = '48px';
+          });
+          EOF
+          
+          # Insert the demo script into index.html
+          sed -i 's|</head>|<script src="./demo-notice.js"></script></head>|' deploy/index.html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './deploy'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

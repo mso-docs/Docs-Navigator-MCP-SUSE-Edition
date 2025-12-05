@@ -4,6 +4,8 @@ An **AI-powered documentation navigator** built as a Model Context Protocol (MCP
 
 ✨ **New:** Production-ready with SQLite caching, advanced analytics, concurrent indexing support, and organized codebase!
 
+🎨 **[View Live Demo](https://mso-docs.github.io/Docs-Navigator-MCP-SUSE-Edition/)** - Check out the modern UI on GitHub Pages!
+
 ## 📚 Documentation
 
 - [Architecture Overview](docs/ARCHITECTURE.md) - System design and components
@@ -15,6 +17,7 @@ An **AI-powered documentation navigator** built as a Model Context Protocol (MCP
 - [Web GUI Guide](docs/WEB_GUI.md) - Web interface documentation
 - [MCP Client Setup](docs/MCP_CLIENT_CONFIG.md) - Configure MCP clients
 - [SQLite Migration Guide](docs/SQLITE_MIGRATION.md) - SQLite caching details
+- [GitHub Pages Deployment](docs/GITHUB_PAGES.md) - Deploy UI showcase to GitHub Pages
 - [Contributing](docs/CONTRIBUTING.md) - Contribution guidelines
 
 ## 🌟 Features
