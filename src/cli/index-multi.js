@@ -17,7 +17,7 @@ let sources = args.length > 0 ? args : ['k3s'];
 
 // If 'all' is specified, index all available sources
 if (sources.includes('all')) {
-  sources = ['k3s', 'rancher', 'suse'];
+  sources = ['suse', 'rancher', 'k3s', 'rke2', 'longhorn', 'harvester', 'neuvector', 'kubewarden'];
 }
 
 console.log(`\n🚀 Starting multi-source documentation indexing`);

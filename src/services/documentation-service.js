@@ -60,6 +60,36 @@ export class DocumentationService {
         baseUrl: process.env.K3S_DOCS_URL || 'https://docs.k3s.io',
         status: 'active',
       },
+      {
+        id: 'rke2',
+        name: 'RKE2 Documentation',
+        baseUrl: process.env.RKE2_DOCS_URL || 'https://docs.rke2.io',
+        status: 'active',
+      },
+      {
+        id: 'longhorn',
+        name: 'Longhorn Documentation',
+        baseUrl: process.env.LONGHORN_DOCS_URL || 'https://longhorn.io/docs',
+        status: 'active',
+      },
+      {
+        id: 'harvester',
+        name: 'Harvester Documentation',
+        baseUrl: process.env.HARVESTER_DOCS_URL || 'https://docs.harvesterhci.io',
+        status: 'active',
+      },
+      {
+        id: 'neuvector',
+        name: 'NeuVector Documentation',
+        baseUrl: process.env.NEUVECTOR_DOCS_URL || 'https://open-docs.neuvector.com',
+        status: 'active',
+      },
+      {
+        id: 'kubewarden',
+        name: 'Kubewarden Documentation',
+        baseUrl: process.env.KUBEWARDEN_DOCS_URL || 'https://docs.kubewarden.io',
+        status: 'active',
+      },
     ];
 
     sources.forEach((source) => {
