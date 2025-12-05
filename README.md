@@ -1,6 +1,6 @@
 # Docs Navigator MCP - SUSE Edition
 
-An **AI-powered documentation navigator** built as a Model Context Protocol (MCP) server that enables intelligent search, summarization, and exploration of SUSE, Rancher, and K3s documentation using **open-source AI models**.
+An **AI-powered documentation navigator** built as a Model Context Protocol (MCP) server that enables intelligent search, summarization, and exploration of SUSE, Rancher, K3s, RKE2, Longhorn, Harvester, NeuVector, and Kubewarden documentation using **open-source AI models**.
 
 ✨ **New:** Production-ready with SQLite caching, advanced analytics, concurrent indexing support, and organized codebase!
 
@@ -8,6 +8,8 @@ An **AI-powered documentation navigator** built as a Model Context Protocol (MCP
 
 - [Architecture Overview](docs/ARCHITECTURE.md) - System design and components
 - [Installation Guide](docs/INSTALL.md) - Detailed setup instructions
+- [Documentation Sources](docs/SOURCES.md) - All available sources and usage guide
+- [Indexing Guide](docs/INDEXING_GUIDE.md) - Understanding caching vs indexing ⭐
 - [Quick Reference](docs/QUICKREF.md) - Command reference
 - [Usage Examples](docs/EXAMPLES.md) - Common usage patterns
 - [Web GUI Guide](docs/WEB_GUI.md) - Web interface documentation
@@ -21,7 +23,7 @@ An **AI-powered documentation navigator** built as a Model Context Protocol (MCP
 - 🌐 **Web GUI** - Beautiful localhost web interface for easy access
 - 🔍 **Semantic Documentation Search** - Find relevant docs using natural language queries
 - 🤖 **Local Open-Source AI** - Powered by Ollama (Llama, Mistral, etc.) - no API keys required
-- 📚 **Multi-Source Support** - Navigate SUSE, Rancher, K3s, and related documentation
+- 📚 **Multi-Source Support** - Navigate SUSE, Rancher, K3s, RKE2, Longhorn, Harvester, NeuVector, Kubewarden documentation
 - 💬 **Conversational Interface** - Ask questions and get answers with source citations
 - 📝 **Smart Summarization** - Generate concise or detailed summaries of documentation
 - 🔌 **MCP Protocol** - Integrates with Claude Desktop and other MCP-compatible clients
@@ -731,11 +733,19 @@ See [LICENSE](LICENSE) file for details.
 
 ## 🔗 Resources
 
+### Platform & Tools
 - [Model Context Protocol](https://modelcontextprotocol.io)
 - [Ollama](https://ollama.ai)
+
+### Documentation Sources
 - [SUSE Documentation](https://documentation.suse.com)
-- [Rancher Docs](https://ranchermanager.docs.rancher.com)
+- [Rancher Documentation](https://ranchermanager.docs.rancher.com)
 - [K3s Documentation](https://docs.k3s.io)
+- [RKE2 Documentation](https://docs.rke2.io)
+- [Longhorn Documentation](https://longhorn.io/docs)
+- [Harvester Documentation](https://docs.harvesterhci.io)
+- [NeuVector Documentation](https://open-docs.neuvector.com)
+- [Kubewarden Documentation](https://docs.kubewarden.io)
 
 ---
 

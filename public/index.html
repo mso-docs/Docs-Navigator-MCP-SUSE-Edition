@@ -426,9 +426,7 @@
                     <label for="searchSource">Source</label>
                     <select id="searchSource">
                         <option value="all">All Sources</option>
-                        <option value="suse">SUSE</option>
-                        <option value="rancher">Rancher</option>
-                        <option value="k3s">K3s</option>
+                        <!-- Sources will be populated dynamically -->
                     </select>
                 </div>
                 <button onclick="performSearch()">Search</button>
@@ -502,10 +500,8 @@
                 <div class="input-group">
                     <label for="indexSource">Select Source</label>
                     <select id="indexSource">
-                        <option value="suse">SUSE Documentation</option>
-                        <option value="rancher">Rancher Documentation</option>
-                        <option value="k3s">K3s Documentation (Fastest)</option>
                         <option value="all">All Sources</option>
+                        <!-- Sources will be populated dynamically -->
                     </select>
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
@@ -735,6 +731,9 @@
                 const response = await fetch('/api/sources');
                 const data = await response.json();
                 
+                // Update source dropdowns
+                populateSourceDropdowns(data.sources);
+                
                 sourcesDiv.innerHTML = data.sources.map(source => `
                     <div class="source-card">
                         <h3>${source.name}</h3>
@@ -746,6 +745,20 @@
             } catch (error) {
                 sourcesDiv.innerHTML = `<div class="error">Error loading sources: ${error.message}</div>`;
             }
+        }
+        
+        // Populate source dropdowns
+        function populateSourceDropdowns(sources) {
+            const searchSelect = document.getElementById('searchSource');
+            const indexSelect = document.getElementById('indexSource');
+            
+            // Keep "All Sources" option and add all sources
+            const sourceOptions = sources.map(source => 
+                `<option value="${source.id}">${source.name}${source.status === 'indexed' ? '' : ' (not indexed)'}</option>`
+            ).join('');
+            
+            searchSelect.innerHTML = '<option value="all">All Sources</option>' + sourceOptions;
+            indexSelect.innerHTML = '<option value="all">All Sources</option>' + sourceOptions;
         }
 
         // Show index modal
@@ -800,6 +813,7 @@
 
         // Initialize
         checkHealth();
+        loadSources(); // Load sources on page load
         setInterval(checkHealth, 30000); // Check every 30 seconds
     </script>
 </body>
