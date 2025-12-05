@@ -1,5 +1,7 @@
 # Contributing to Docs Navigator MCP - SUSE Edition
 
+![Docs Navigator Logo](.\.\assets\docs-nav-suse.png)
+
 Thank you for your interest in contributing to this project!
 
 ## Development Setup

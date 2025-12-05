@@ -1,5 +1,7 @@
 # Docs Navigator MCP - SUSE Edition
 
+![Docs Navigator MCP - SUSE Edition](./assets/Docs%20Navigator%20MCP.png)
+
 An **AI-powered documentation navigator** built as a Model Context Protocol (MCP) server that enables intelligent search, summarization, and exploration of SUSE, Rancher, K3s, RKE2, Longhorn, Harvester, NeuVector, and Kubewarden documentation using **open-source AI models**.
 
 ✨ **New:** Production-ready with SQLite caching, advanced analytics, concurrent indexing support, and organized codebase!
@@ -42,6 +44,93 @@ An **AI-powered documentation navigator** built as a Model Context Protocol (MCP
 - 📈 **Cache Management** - Validate, clear, rebuild, and optimize caches
 - 🎯 **Smart Indexing** - Conditional GET requests, ETag/Last-Modified support, content hash detection
 - 📦 **Organized Codebase** - Clean directory structure with CLI/services/tests/utils separation
+
+## 🏗️ Architecture
+
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        WEB[🌐 Web Browser<br/>localhost:3000]
+        CLAUDE[🤖 Claude Desktop<br/>MCP Client]
+        CLI[⌨️ CLI Tools<br/>npm commands]
+    end
+
+    subgraph "Application Layer"
+        WEBSERVER[🖥️ Web Server<br/>Express.js<br/>Port 3000]
+        MCP[📡 MCP Server<br/>index.js<br/>stdio protocol]
+        CLITOOLS[🛠️ CLI Tools<br/>indexer, analytics,<br/>cache manager]
+    end
+
+    subgraph "Service Layer"
+        DOCSERVICE[📚 Documentation Service<br/>- Fetch & Parse HTML<br/>- Content Extraction<br/>- Sitemap Processing]
+        AISERVICE[🧠 AI Service<br/>- LLM Integration<br/>- Prompt Management<br/>- Response Formatting]
+        VECTORSERVICE[🔍 Vector Service<br/>- Embedding Generation<br/>- Semantic Search<br/>- Similarity Ranking]
+        CACHESERVICE[💾 Cache Service<br/>- SQLite Operations<br/>- Page Management<br/>- Lock Handling]
+    end
+
+    subgraph "Storage Layer"
+        SQLITE[(🗄️ SQLite Database<br/>page-cache.db<br/>- Pages Table<br/>- Locks Table)]
+        VECTORS[(📊 Vector Index<br/>vectra/index.json<br/>- Embeddings<br/>- Metadata)]
+        HTMLCACHE[📁 HTML Cache<br/>data/html/<br/>cached pages]
+    end
+
+    subgraph "External Services"
+        OLLAMA[🦙 Ollama<br/>Local LLMs<br/>localhost:11434]
+        OPENAI[🌐 OpenAI API<br/>GPT Models<br/>Embeddings]
+        ANTHROPIC[🔷 Anthropic API<br/>Claude Models]
+        DOCS[📖 Documentation Sites<br/>- docs.k3s.io<br/>- ranchermanager.docs<br/>- documentation.suse.com<br/>- etc.]
+    end
+
+    %% Client connections
+    WEB -->|HTTP/REST API| WEBSERVER
+    CLAUDE -->|stdio/MCP| MCP
+    CLI -->|Node.js| CLITOOLS
+
+    %% Application layer connections
+    WEBSERVER -->|Use Services| DOCSERVICE
+    WEBSERVER -->|Use Services| AISERVICE
+    WEBSERVER -->|Use Services| VECTORSERVICE
+    MCP -->|Use Services| DOCSERVICE
+    MCP -->|Use Services| AISERVICE
+    MCP -->|Use Services| VECTORSERVICE
+    CLITOOLS -->|Use Services| DOCSERVICE
+    CLITOOLS -->|Use Services| CACHESERVICE
+
+    %% Service layer connections
+    DOCSERVICE -->|Read/Write| CACHESERVICE
+    DOCSERVICE -->|Fetch| DOCS
+    DOCSERVICE -->|Store HTML| HTMLCACHE
+    AISERVICE -->|Query LLM| OLLAMA
+    AISERVICE -->|Query LLM| OPENAI
+    AISERVICE -->|Query LLM| ANTHROPIC
+    VECTORSERVICE -->|Generate Embeddings| OLLAMA
+    VECTORSERVICE -->|Generate Embeddings| OPENAI
+    VECTORSERVICE -->|Read/Write| VECTORS
+    CACHESERVICE -->|SQL Operations| SQLITE
+
+    %% Styling
+    classDef clientStyle fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    classDef appStyle fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef serviceStyle fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    classDef storageStyle fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef externalStyle fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+
+    class WEB,CLAUDE,CLI clientStyle
+    class WEBSERVER,MCP,CLITOOLS appStyle
+    class DOCSERVICE,AISERVICE,VECTORSERVICE,CACHESERVICE serviceStyle
+    class SQLITE,VECTORS,HTMLCACHE storageStyle
+    class OLLAMA,OPENAI,ANTHROPIC,DOCS externalStyle
+```
+
+### Key Components
+
+- **Web GUI**: Modern React-like interface for interactive documentation search
+- **MCP Server**: Model Context Protocol implementation for Claude Desktop integration
+- **CLI Tools**: Command-line utilities for indexing, analytics, and cache management
+- **Documentation Service**: Handles fetching, parsing, and caching of documentation pages
+- **AI Service**: Manages LLM interactions with support for multiple providers (Ollama, OpenAI, Anthropic)
+- **Vector Service**: Generates embeddings and performs semantic search using Vectra
+- **Cache Service**: SQLite-based caching system with locking for concurrent operations
 
 ## 🆕 Recent Updates (December 2025)
 
