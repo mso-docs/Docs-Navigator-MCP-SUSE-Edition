@@ -4,7 +4,7 @@
  * Test script to verify embedding cache functionality
  */
 
-import { AIService } from './services/ai-service.js';
+import { AIService } from '../services/ai-service.js';
 import dotenv from 'dotenv';
 
 dotenv.config();

@@ -5,7 +5,7 @@
  * Usage: node src/test-batch-sizes.js [source]
  */
 
-import { DocumentationService } from './services/documentation-service.js';
+import { DocumentationService } from '../services/documentation-service.js';
 import dotenv from 'dotenv';
 
 dotenv.config();

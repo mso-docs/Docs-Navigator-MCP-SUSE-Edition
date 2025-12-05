@@ -2,6 +2,7 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import TurndownService from 'turndown';
 import { VectorService } from './vector-service.js';
+import { CacheService } from './cache-service.js';
 import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
@@ -14,8 +15,19 @@ export class DocumentationService {
     });
     this.vectorService = new VectorService();
     this.sources = new Map();
-    this.pageCache = new Map();
-    this.pageCachePath = process.env.PAGE_CACHE_PATH || './data/page-cache.json';
+    
+    // Use SQLite cache by default, fall back to JSON Map if USE_JSON_CACHE=true
+    this.useJsonCache = process.env.USE_JSON_CACHE === 'true';
+    
+    if (this.useJsonCache) {
+      this.pageCache = new Map();
+      this.pageCachePath = process.env.PAGE_CACHE_PATH || './data/page-cache.json';
+      console.log('📦 Using JSON cache (legacy mode)');
+    } else {
+      this.pageCache = new CacheService(process.env.PAGE_CACHE_PATH || './data/page-cache.db');
+      console.log('📦 Using SQLite cache');
+    }
+    
     this.htmlCacheDir = process.env.HTML_CACHE_DIR || './data/html';
     this.pageCacheStats = {
       hits304: 0,
@@ -56,28 +68,70 @@ export class DocumentationService {
   }
 
   async listSources() {
-    return Array.from(this.sources.values());
+    await this.loadPageCache();
+    
+    // Count indexed documents per source
+    const sourceCounts = new Map();
+    
+    for (const [url, cacheEntry] of this.pageCache.entries()) {
+      if (cacheEntry.indexed) {
+        // Extract source from URL or use cached source info
+        const source = cacheEntry.source || this.getSourceFromUrl(url);
+        if (source) {
+          sourceCounts.set(source, (sourceCounts.get(source) || 0) + 1);
+        }
+      }
+    }
+    
+    // Add document counts to source definitions
+    return Array.from(this.sources.values()).map(source => ({
+      ...source,
+      documentCount: sourceCounts.get(source.id) || 0,
+      status: sourceCounts.get(source.id) > 0 ? 'indexed' : 'not indexed'
+    }));
+  }
+  
+  getSourceFromUrl(url) {
+    // Determine source from URL pattern
+    for (const [id, source] of this.sources.entries()) {
+      if (url.startsWith(source.baseUrl)) {
+        return id;
+      }
+    }
+    return null;
   }
 
   async loadPageCache() {
     if (this.pageCacheLoaded) return;
 
-    try {
-      const cacheDir = path.dirname(this.pageCachePath);
-      await fs.mkdir(cacheDir, { recursive: true });
+    if (this.useJsonCache) {
+      // Legacy JSON cache
+      try {
+        const cacheDir = path.dirname(this.pageCachePath);
+        await fs.mkdir(cacheDir, { recursive: true });
 
-      const data = await fs.readFile(this.pageCachePath, 'utf-8');
-      const cacheData = JSON.parse(data);
+        const data = await fs.readFile(this.pageCachePath, 'utf-8');
+        const cacheData = JSON.parse(data);
 
-      // Load into Map
-      for (const [key, value] of Object.entries(cacheData)) {
-        this.pageCache.set(key, value);
+        // Load into Map
+        for (const [key, value] of Object.entries(cacheData)) {
+          this.pageCache.set(key, value);
+        }
+
+        this.pageCacheStats.loaded = this.pageCache.size;
+        console.log(`📦 Loaded ${this.pageCacheStats.loaded} cached pages from disk`);
+      } catch (error) {
+        if (error.code !== 'ENOENT') {
+          console.error('Failed to load page cache:', error.message);
+        }
       }
-
-      this.pageCacheStats.loaded = this.pageCache.size;
-      console.log(`📦 Loaded ${this.pageCacheStats.loaded} cached pages from disk`);
-    } catch (error) {
-      if (error.code !== 'ENOENT') {
+    } else {
+      // SQLite cache
+      try {
+        await this.pageCache.initialize();
+        this.pageCacheStats.loaded = this.pageCache.size;
+        console.log(`📦 Loaded ${this.pageCacheStats.loaded} cached pages from SQLite`);
+      } catch (error) {
         console.error('Failed to load page cache:', error.message);
       }
     }
@@ -86,15 +140,21 @@ export class DocumentationService {
   }
 
   async savePageCache() {
-    try {
-      const cacheDir = path.dirname(this.pageCachePath);
-      await fs.mkdir(cacheDir, { recursive: true });
+    if (this.useJsonCache) {
+      // Legacy JSON cache
+      try {
+        const cacheDir = path.dirname(this.pageCachePath);
+        await fs.mkdir(cacheDir, { recursive: true });
 
-      const cacheData = Object.fromEntries(this.pageCache);
-      await fs.writeFile(this.pageCachePath, JSON.stringify(cacheData, null, 2), 'utf-8');
-      console.log(`💾 Saved ${this.pageCache.size} page cache entries`);
-    } catch (error) {
-      console.error('Failed to save page cache:', error.message);
+        const cacheData = Object.fromEntries(this.pageCache);
+        await fs.writeFile(this.pageCachePath, JSON.stringify(cacheData, null, 2), 'utf-8');
+        console.log(`💾 Saved ${this.pageCache.size} page cache entries`);
+      } catch (error) {
+        console.error('Failed to save page cache:', error.message);
+      }
+    } else {
+      // SQLite cache auto-saves on each operation, just log the count
+      console.log(`💾 SQLite cache contains ${this.pageCache.size} page entries`);
     }
   }
 
@@ -358,6 +418,11 @@ export class DocumentationService {
           
           if (shouldSkip) {
             const cached = this.pageCache.get(url);
+            // Ensure source is set for skipped documents
+            if (cached && !cached.source) {
+              cached.source = source.id;
+              this.pageCache.set(url, cached);
+            }
             // Verify with a HEAD request or conditional GET
             try {
               const response = await axios.head(url, {
@@ -371,7 +436,6 @@ export class DocumentationService {
               
               if (response.status === 304) {
                 // Document definitely unchanged, skip it
-                skipped++;
                 this.pageCacheStats.skipped++;
                 return { url, skipped: true };
               }
@@ -392,13 +456,16 @@ export class DocumentationService {
             },
           });
 
-      // Mark as indexed in page cache and update last_checked timestamp
-      const cached = this.pageCache.get(url);
-      if (cached) {
-        cached.indexed = true;
-        cached.last_checked = Date.now();
-        this.pageCache.set(url, cached);
-      }          return { url, skipped: false };
+          // Mark as indexed in page cache and update last_checked timestamp
+          const cached = this.pageCache.get(url);
+          if (cached) {
+            cached.indexed = true;
+            cached.source = source.id;  // Store source for accurate counting
+            cached.last_checked = Date.now();
+            this.pageCache.set(url, cached);
+          }
+          
+          return { url, skipped: false };
         })
       );
       
@@ -406,6 +473,7 @@ export class DocumentationService {
       results.forEach((result, idx) => {
         if (result.status === 'fulfilled') {
           if (result.value.skipped) {
+            skipped++;
             console.log(`⊘ Skipped (unchanged) (${indexed + skipped}/${documentUrls.length}): ${batch[idx]}`);
           } else {
             indexed++;
