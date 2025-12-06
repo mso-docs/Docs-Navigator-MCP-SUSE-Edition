@@ -19,6 +19,7 @@ An **AI-powered documentation navigator** built as a Model Context Protocol (MCP
 - [Web GUI Guide](docs/WEB_GUI.md) - Web interface documentation
 - [MCP Client Setup](docs/MCP_CLIENT_CONFIG.md) - Configure MCP clients
 - [SQLite Migration Guide](docs/SQLITE_MIGRATION.md) - SQLite caching details
+- [Change Detection](docs/CHANGE_DETECTION.md) - Auto-update system for monitoring doc changes ⭐
 - [GitHub Pages Deployment](docs/GITHUB_PAGES.md) - Deploy UI showcase to GitHub Pages
 - [Contributing](docs/CONTRIBUTING.md) - Contribution guidelines
 
@@ -43,6 +44,7 @@ An **AI-powered documentation navigator** built as a Model Context Protocol (MCP
 - 🔒 **Concurrent Indexing** - Safe multi-process indexing with automatic locking
 - 📈 **Cache Management** - Validate, clear, rebuild, and optimize caches
 - 🎯 **Smart Indexing** - Conditional GET requests, ETag/Last-Modified support, content hash detection
+- 🔄 **Change Detection** - Monitor docs for updates and auto-trigger re-indexing
 - 📦 **Organized Codebase** - Clean directory structure with CLI/services/tests/utils separation
 
 ## 🏗️ Architecture

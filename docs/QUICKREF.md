@@ -20,12 +20,16 @@ ollama pull nomic-embed-text
 | Command | Description |
 |---------|-------------|
 | `npm install` | Install dependencies |
-| `npm run build` | Compile TypeScript to JavaScript |
-| `npm run dev` | Watch mode - rebuild on changes |
 | `npm start` | Start the MCP server |
 | `npm run web` | Start the web interface on localhost:3000 |
-| `npm run dev:web` | Build and start web interface |
 | `npm test` | Run component tests |
+| `npm run index <source>` | Index documentation for a source |
+| `npm run stats` | Show indexing statistics |
+| `npm run check-changes` | Check documentation for updates |
+| `npm run analytics` | Show cache analytics |
+| `npm run query-cache` | Query cached documents |
+| `npm run clear-locks` | Clear indexing locks |
+| `npm run migrate-sqlite` | Migrate from JSON to SQLite cache |
 
 ## MCP Tools Reference
 
@@ -149,15 +153,34 @@ Docs-Navigator-MCP-SUSE-Edition/
 
 ### Development
 ```bash
-npm run dev                  # Watch mode for development
-npm run build               # Build for production
-npm start                   # Run the server
+npm start                   # Run the MCP server
+npm run web                 # Start web interface
+```
+
+### Indexing & Caching
+```bash
+npm run index k3s           # Index K3s documentation
+npm run index all           # Index all sources
+npm run stats               # Show indexing statistics
+npm run analytics           # Detailed cache analytics
+npm run query-cache         # Query cached documents
+npm run clear-cache         # Clear cache
+npm run clear-locks         # Clear indexing locks
+```
+
+### Change Detection
+```bash
+npm run check-changes                    # Check all sources
+npm run check-changes k3s                # Check specific source
+npm run check-changes -- --stats         # Show statistics
+npm run check-changes -- --limit 10      # Check first 10 pages
+npm run check-changes -- --days 7        # Check pages >7 days old
+npm run check-changes -- --watch         # Watch mode (continuous)
 ```
 
 ### Testing
 ```bash
 npm test                    # Run component tests
-node dist/index.js          # Test server directly
 ```
 
 ### Ollama

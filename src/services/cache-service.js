@@ -166,9 +166,30 @@ export class CacheService {
   }
 
   /**
+   * Get all pages (alias for getAllPages but returns just objects, not tuples)
+   */
+  getAll() {
+    if (!this.initialized) throw new Error('Cache not initialized');
+    
+    const stmt = this.db.prepare('SELECT * FROM pages');
+    const rows = stmt.all();
+    
+    return rows.map(row => ({
+      url: row.url,
+      etag: row.etag,
+      lastModified: row.last_modified,
+      contentHash: row.content_hash,
+      htmlPath: row.html_path,
+      lastChecked: row.last_checked,
+      indexed: Boolean(row.indexed),
+      source: row.source,
+    }));
+  }
+
+  /**
    * Get pages by source
    */
-  getPagesBySource(source) {
+  getBySource(source) {
     if (!this.initialized) throw new Error('Cache not initialized');
     
     const stmt = this.db.prepare('SELECT * FROM pages WHERE source = ?');
@@ -184,6 +205,13 @@ export class CacheService {
       indexed: Boolean(row.indexed),
       source: row.source,
     }));
+  }
+
+  /**
+   * Get pages by source (legacy name)
+   */
+  getPagesBySource(source) {
+    return this.getBySource(source);
   }
 
   /**
