@@ -96,8 +96,8 @@ app.post('/api/fetch', async (req, res) => {
       return res.status(400).json({ error: 'URL is required' });
     }
 
-    const content = await docService.fetchDocumentation(url);
-    res.json({ content });
+    const { markdown, title } = await docService.fetchDocumentation(url);
+    res.json({ content: markdown, title });
   } catch (error) {
     res.status(500).json({ error: String(error) });
   }
@@ -112,8 +112,8 @@ app.post('/api/summarize', async (req, res) => {
       return res.status(400).json({ error: 'URL is required' });
     }
 
-    const content = await docService.fetchDocumentation(url);
-    const summary = await aiService.summarize(content, format);
+    const { markdown } = await docService.fetchDocumentation(url);
+    const summary = await aiService.summarize(markdown, format);
     
     res.json({ summary });
   } catch (error) {

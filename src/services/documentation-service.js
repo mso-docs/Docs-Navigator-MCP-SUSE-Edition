@@ -306,6 +306,33 @@ export class DocumentationService {
 
       const $ = cheerio.load(html);
 
+      // Extract title from HTML before we remove elements
+      let title = '';
+      
+      // Try to get title from various sources
+      const titleTag = $('title').first().text();
+      const h1Tag = $('h1').first().text();
+      const ogTitle = $('meta[property="og:title"]').attr('content');
+      const twitterTitle = $('meta[name="twitter:title"]').attr('content');
+      
+      // Prefer h1, then og:title, then title tag, then twitter:title
+      title = h1Tag || ogTitle || titleTag || twitterTitle || '';
+      
+      // Clean up title (remove site name suffixes, extra whitespace, special chars)
+      title = title
+        .replace(/\s*[\|\-\–]\s*.*(Documentation|Docs|SUSE|Rancher|K3s|RKE2|Longhorn|Harvester|NeuVector|Kubewarden).*$/i, '')
+        .replace(/\[#\]\([^)]+\s+"Permalink"\)/g, '') // Remove [#](url "Permalink")
+        .replace(/\s+/g, ' ')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&#160;/g, ' ')
+        .replace(/Â/g, '')
+        .trim();
+      
+      // Limit title length
+      if (title.length > 80) {
+        title = title.substring(0, 77) + '...';
+      }
+
       // Remove script, style, and nav elements
       $('script, style, nav, header, footer, .sidebar, .navigation').remove();
 
@@ -336,7 +363,8 @@ export class DocumentationService {
       // Convert HTML to Markdown
       const markdown = this.turndownService.turndown(content);
 
-      return markdown;
+      // Return both markdown and extracted title
+      return { markdown, title: title || 'Untitled' };
     } catch (error) {
       throw new Error(`Failed to fetch documentation from ${url}: ${error.message}`);
     }
@@ -474,14 +502,14 @@ export class DocumentationService {
             }
           }
 
-          const content = await this.fetchDocumentation(url);
+          const { markdown, title } = await this.fetchDocumentation(url);
           await this.vectorService.addDocument({
             id: url,
-            content,
+            content: markdown,
             metadata: {
               source: source.id,
               url,
-              title: this.extractTitle(content),
+              title: title || this.extractTitle(markdown),
               indexedAt: new Date().toISOString(),
             },
           });

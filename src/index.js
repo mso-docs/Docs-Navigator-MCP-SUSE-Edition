@@ -206,13 +206,13 @@ class DocsNavigatorServer {
 
   async handleGetDocSection(args) {
     const url = args.url;
-    const content = await this.docService.fetchDocumentation(url);
+    const { markdown } = await this.docService.fetchDocumentation(url);
 
     return {
       content: [
         {
           type: 'text',
-          text: content,
+          text: markdown,
         },
       ],
     };
@@ -222,8 +222,8 @@ class DocsNavigatorServer {
     const url = args.url;
     const format = args.format || 'brief';
 
-    const docContent = await this.docService.fetchDocumentation(url);
-    const summary = await this.aiService.summarize(docContent, format);
+    const { markdown } = await this.docService.fetchDocumentation(url);
+    const summary = await this.aiService.summarize(markdown, format);
 
     return {
       content: [
