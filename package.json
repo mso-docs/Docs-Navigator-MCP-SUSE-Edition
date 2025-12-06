@@ -18,7 +18,8 @@
     "migrate-sqlite": "node src/utils/migrate-to-sqlite.js",
     "analytics": "node src/cli/cache-analytics.js",
     "query-cache": "node src/cli/query-cache.js",
-    "clear-locks": "node src/cli/clear-locks.js"
+    "clear-locks": "node src/cli/clear-locks.js",
+    "check-changes": "node src/cli/check-changes.js"
   },
   "keywords": [
     "mcp",

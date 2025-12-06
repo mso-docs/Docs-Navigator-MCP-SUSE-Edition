@@ -4,6 +4,7 @@ import express from 'express';
 import { AIService } from './services/ai-service.js';
 import { DocumentationService } from './services/documentation-service.js';
 import { VectorService } from './services/vector-service.js';
+import { ChangeDetectionService } from './services/change-detection-service.js';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -20,6 +21,7 @@ const PORT = process.env.PORT || 3000;
 const aiService = new AIService();
 const docService = new DocumentationService();
 const vectorService = new VectorService();
+const changeDetectionService = new ChangeDetectionService();
 
 // Middleware
 app.use(express.json());
@@ -136,6 +138,39 @@ app.post('/api/index', async (req, res) => {
     console.log('Indexing complete:', status);
   } catch (error) {
     console.error('Indexing error:', error);
+  }
+});
+
+// Check for changes
+app.post('/api/check-changes', async (req, res) => {
+  try {
+    const { source, limit, olderThanDays } = req.body;
+    
+    await changeDetectionService.initialize();
+    
+    if (source) {
+      const result = await changeDetectionService.checkSourceForChanges(source, {
+        limit,
+        olderThanDays,
+        parallel: 3,
+      });
+      res.json({ result });
+    } else {
+      return res.status(400).json({ error: 'Source is required' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: String(error) });
+  }
+});
+
+// Get change detection statistics
+app.get('/api/change-stats', async (req, res) => {
+  try {
+    await changeDetectionService.initialize();
+    const stats = await changeDetectionService.getStatistics();
+    res.json({ stats });
+  } catch (error) {
+    res.status(500).json({ error: String(error) });
   }
 });
 
