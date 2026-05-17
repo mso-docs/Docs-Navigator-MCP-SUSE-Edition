@@ -843,4 +843,4 @@ See [LICENSE](LICENSE) file for details.
 
 ---
 
-Built with ❤️ for Hack Week 25
+Built with ❤️ for Hack Week 25.
