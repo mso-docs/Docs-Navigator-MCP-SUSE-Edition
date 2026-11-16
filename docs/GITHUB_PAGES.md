@@ -1,74 +1,30 @@
-# GitHub Pages Deployment
+# GitHub Pages demo
 
-This project includes a GitHub Action that automatically deploys the UI to GitHub Pages for showcasing purposes.
+The live demo at https://mso-docs.github.io/Docs-Navigator-MCP-SUSE-Edition/ is a static copy of `public/`.
+It has no backend. The page searches a snapshot of real documentation pages, `public/demo-data/index.json`, with BM25 in the browser.
 
-## 🚀 How to Enable GitHub Pages
+## What the demo does and doesn't do
 
-1. **Enable GitHub Pages in your repository:**
-   - Go to your repository on GitHub
-   - Navigate to **Settings** → **Pages**
-   - Under "Build and deployment", set:
-     - **Source**: GitHub Actions
-   
-2. **Trigger the deployment:**
-   - The workflow automatically runs on pushes to `main` or `docs-additions` branches
-   - Or manually trigger it from the **Actions** tab → **Deploy to GitHub Pages** → **Run workflow**
+- Search works across all eight sources, in the browser, on the snapshot.
+- Ask shows the best matching passages. A sample answer on the page shows what a live answer looks like.
+- Summarize, indexing, and AI answers need the server. Clone the repo to use them.
 
-3. **Access your deployment:**
-   - Once deployed, your site will be available at: `https://<username>.github.io/<repository-name>/`
-   - For this repo: `https://mso-docs.github.io/Docs-Navigator-MCP-SUSE-Edition/`
+## Enable it
 
-## 📋 What Gets Deployed
+In the repository, go to **Settings → Pages** and set **Source** to **GitHub Actions**. The workflow in `.github/workflows/deploy-pages.yml` runs the tests and publishes `public/` on every push to `main`.
 
-The GitHub Pages deployment includes:
-- ✅ Full UI with modern design
-- ✅ Source cards showcase
-- ✅ Static demo data showing all documentation sources
-- ⚠️ **Demo Mode**: Search and AI features show informational messages (backend required for full functionality)
+## Refresh the snapshot
 
-## 🎨 Demo Mode Features
+```bash
+npm ci
+npm run build-demo      # crawls a few dozen pages per source into public/demo-data/index.json
+npm run build-sample    # rewrites public/demo-data/sample.json
+```
 
-The GitHub Pages version runs in **demo mode** because it's a static site:
-- Shows the complete UI design
-- Displays all documentation sources
-- Interactive tabs and navigation work fully
-- Search/Ask/Summarize features display informational messages explaining that the backend is needed
+`build-sample` quotes the best-matching passage by default. To have an open model write the sample answer instead:
 
-To use the **full application** with AI-powered search:
-1. Clone the repository
-2. Install dependencies: `npm install`
-3. Configure your AI provider (Ollama or OpenAI)
-4. Run locally: `npm run web`
+```bash
+AI_PROVIDER=huggingface HF_TOKEN=hf_... npm run build-sample
+```
 
-## 🔧 Workflow Configuration
-
-The deployment workflow (`.github/workflows/deploy-pages.yml`) does the following:
-1. Checks out the code
-2. Sets up Node.js environment
-3. Installs dependencies
-4. Copies public files to deployment directory
-5. Creates mock API responses for demo mode
-6. Injects demo mode JavaScript
-7. Deploys to GitHub Pages
-
-## 🛠️ Manual Deployment
-
-To manually trigger a deployment:
-1. Go to the **Actions** tab in your GitHub repository
-2. Select **Deploy to GitHub Pages** workflow
-3. Click **Run workflow**
-4. Select the branch (usually `main` or `docs-additions`)
-5. Click **Run workflow**
-
-The deployment typically takes 1-2 minutes to complete.
-
-## 📝 Customization
-
-To customize the demo mode banner or behavior, edit the `demo-notice.js` content in the workflow file (`.github/workflows/deploy-pages.yml`).
-
-## 🔒 Required Permissions
-
-The workflow requires these permissions (already configured):
-- `contents: read` - Read repository content
-- `pages: write` - Deploy to GitHub Pages
-- `id-token: write` - Required for GitHub Pages deployment
+The token needs the “Make calls to Inference Providers” permission. Commit the two JSON files.

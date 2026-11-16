@@ -1,5 +1,6 @@
 import { LocalIndex } from 'vectra';
 import { AIService } from './ai-service.js';
+import { LexicalIndex } from './lexical-service.js';
 import path from 'path';
 import fs from 'fs/promises';
 import pLimit from 'p-limit';
@@ -9,6 +10,10 @@ export class VectorService {
     this.indexPath = process.env.VECTOR_DB_PATH || './data/vectors';
     this.index = new LocalIndex(this.indexPath);
     this.aiService = new AIService();
+    this.lexical = new LexicalIndex();
+    // auto: semantic search, falling back to keyword search if embeddings are unavailable
+    // semantic: embeddings only. lexical: keyword search only (no embedding model needed)
+    this.searchMode = (process.env.SEARCH_MODE || 'auto').toLowerCase();
     this.initialized = false;
     this.updateQueue = Promise.resolve();
     // Limit concurrent embedding requests to avoid overwhelming Ollama
@@ -52,6 +57,10 @@ export class VectorService {
         const chunkSize = parseInt(process.env.CHUNK_SIZE) || 1500;
         const chunks = this.splitIntoChunks(doc.content, chunkSize);
 
+        // Keyword index first: it is cheap and keeps the page searchable if embeddings fail.
+        this.lexical.replaceDocument(doc.id, doc.metadata, chunks);
+        if (this.searchMode === 'lexical') return;
+
         await this.index.beginUpdate();
 
         try {
@@ -88,6 +97,10 @@ export class VectorService {
           } catch (e) {
             // Ignore endUpdate errors
           }
+          if (this.searchMode === 'auto') {
+            console.warn(`Embeddings unavailable for ${doc.id}; indexed for keyword search only (${error.message})`);
+            return;
+          }
           throw error;
         }
       } catch (error) {
@@ -101,51 +114,58 @@ export class VectorService {
   }
 
   async search(query, source = 'all', limit = 5) {
+    if (this.searchMode === 'lexical') {
+      return this.lexical.search(query, source, limit);
+    }
+    try {
+      const results = await this.semanticSearch(query, source, limit);
+      if (results.length > 0 || this.searchMode === 'semantic') return results;
+    } catch (error) {
+      if (this.searchMode === 'semantic') {
+        console.error('Search failed:', error);
+        return [];
+      }
+    }
+    return this.lexical.search(query, source, limit);
+  }
+
+  async semanticSearch(query, source = 'all', limit = 5) {
     await this.ensureInitialized();
 
-    try {
-      // Generate query embedding
-      const queryEmbedding = await this.aiService.generateEmbedding(query);
+    // Generate query embedding
+    const queryEmbedding = await this.aiService.generateEmbedding(query);
 
-      // Search the index
-      const results = await this.index.queryItems(queryEmbedding, limit * 2);
+    // Search the index
+    const results = await this.index.queryItems(queryEmbedding, limit * 2);
 
-      // Filter by source if specified
-      const filteredResults = source === 'all' 
-        ? results 
-        : results.filter((r) => r.item.metadata.source === source);
+    // Filter by source if specified
+    const filteredResults =
+      source === 'all' ? results : results.filter((r) => r.item.metadata.source === source);
 
-      // Group chunks by original document and reconstruct content
-      const documentMap = new Map();
+    // Group chunks by original document and reconstruct content
+    const documentMap = new Map();
 
-      for (const result of filteredResults.slice(0, limit * 2)) {
-        const originalDocId = result.item.metadata.originalDocId;
-        
-        if (!documentMap.has(originalDocId)) {
-          // Read the chunk content from the index
-          const content = await this.getChunkContent(result.item.id);
-          
-          documentMap.set(originalDocId, {
-            content: content,
-            metadata: {
-              source: result.item.metadata.source,
-              url: result.item.metadata.url,
-              title: result.item.metadata.title,
-              score: result.score,
-            },
-          });
-        }
+    for (const result of filteredResults.slice(0, limit * 2)) {
+      const originalDocId = result.item.metadata.originalDocId;
 
-        if (documentMap.size >= limit) {
-          break;
-        }
+      if (!documentMap.has(originalDocId)) {
+        const content = await this.getChunkContent(result.item.id);
+
+        documentMap.set(originalDocId, {
+          content,
+          metadata: {
+            source: result.item.metadata.source,
+            url: result.item.metadata.url,
+            title: result.item.metadata.title,
+            score: result.score,
+          },
+        });
       }
 
-      return Array.from(documentMap.values());
-    } catch (error) {
-      console.error('Search failed:', error);
-      return [];
+      if (documentMap.size >= limit) break;
     }
+
+    return Array.from(documentMap.values());
   }
 
   sanitizeFilename(filename) {
@@ -204,6 +224,7 @@ export class VectorService {
   }
 
   async deleteDocument(docId) {
+    this.lexical.deleteDocument(docId);
     await this.ensureInitialized();
 
     try {
@@ -227,6 +248,7 @@ export class VectorService {
   }
 
   async clear() {
+    this.lexical.clear();
     await this.ensureInitialized();
     await this.index.beginUpdate();
     const items = await this.index.listItems();

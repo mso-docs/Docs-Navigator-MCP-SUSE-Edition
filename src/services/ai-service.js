@@ -29,6 +29,8 @@ export class AIService {
         return process.env.OPENAI_MODEL || 'gpt-4-turbo-preview';
       case 'anthropic':
         return process.env.ANTHROPIC_MODEL || 'claude-3-sonnet-20240229';
+      case 'huggingface':
+        return process.env.HF_MODEL || 'meta-llama/Llama-3.3-70B-Instruct';
       default:
         return 'llama3.2:latest';
     }
@@ -53,6 +55,15 @@ export class AIService {
           apiKey: process.env.ANTHROPIC_API_KEY,
           baseURL: 'https://api.anthropic.com/v1',
         });
+        break;
+      case 'huggingface':
+        // Hugging Face Inference Providers speaks the OpenAI chat API. Open models, billed to your HF account.
+        this.huggingfaceClient = new OpenAI({
+          apiKey: process.env.HF_TOKEN || 'missing-token',
+          baseURL: process.env.HF_BASE_URL || 'https://router.huggingface.co/v1',
+        });
+        break;
+      case 'none':
         break;
     }
     
@@ -277,6 +288,14 @@ Answer:`;
           max_tokens: 2000,
         });
         return response.choices[0]?.message?.content || 'No response generated';
+      } else if (this.provider === 'huggingface') {
+        const response = await this.huggingfaceClient.chat.completions.create({
+          model: this.model,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.2,
+          max_tokens: 1200,
+        });
+        return response.choices[0]?.message?.content || 'No response generated';
       } else if (this.provider === 'anthropic') {
         const response = await this.anthropicClient.chat.completions.create({
           model: this.model,
@@ -292,6 +311,7 @@ Answer:`;
         return response.choices[0]?.message?.content || 'No response generated';
       }
 
+      if (this.provider === 'none') throw new Error('AI answers are turned off (AI_PROVIDER=none)');
       throw new Error(`Unsupported AI provider: ${this.provider}`);
     } catch (error) {
       throw new Error(`AI completion failed: ${error}`);
@@ -300,14 +320,18 @@ Answer:`;
 
   async checkAvailability() {
     try {
+      if (this.provider === 'none') return false;
       if (this.provider === 'ollama') {
         // Check if Ollama is running
         await this.ollamaClient.list();
         return true;
       }
+      if (this.provider === 'huggingface') return Boolean(process.env.HF_TOKEN);
+      if (this.provider === 'openai') return Boolean(process.env.OPENAI_API_KEY);
+      if (this.provider === 'anthropic') return Boolean(process.env.ANTHROPIC_API_KEY);
       return true;
     } catch (error) {
-      console.error('AI service not available:', error);
+      console.error(`AI service not available (${this.provider}):`, error.message || error);
       return false;
     }
   }

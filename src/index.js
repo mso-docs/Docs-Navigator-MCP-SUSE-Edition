@@ -6,18 +6,25 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import dotenv from 'dotenv';
+import { createRequire } from 'module';
 import { AIService } from './services/ai-service.js';
 import { DocumentationService } from './services/documentation-service.js';
 import { VectorService } from './services/vector-service.js';
 
 dotenv.config();
+const pkg = createRequire(import.meta.url)('../package.json');
+
+// stdout carries the MCP protocol. Anything the services print must go to stderr.
+console.log = (...args) => console.error(...args);
+
+const SOURCE_IDS = ['suse', 'rancher', 'k3s', 'rke2', 'longhorn', 'harvester', 'neuvector', 'kubewarden', 'all'];
 
 class DocsNavigatorServer {
   constructor() {
     this.server = new Server(
       {
         name: process.env.MCP_SERVER_NAME || 'docs-navigator-suse',
-        version: '1.0.0',
+        version: pkg.version,
       },
       {
         capabilities: {
@@ -93,7 +100,7 @@ class DocsNavigatorServer {
             source: {
               type: 'string',
               description: 'Optional: Filter by documentation source (suse, rancher, k3s, all)',
-              enum: ['suse', 'rancher', 'k3s', 'all'],
+              enum: SOURCE_IDS,
             },
             limit: {
               type: 'number',
@@ -166,7 +173,7 @@ class DocsNavigatorServer {
             source: {
               type: 'string',
               description: 'Documentation source to index',
-              enum: ['suse', 'rancher', 'k3s', 'all'],
+              enum: SOURCE_IDS,
             },
             forceRefresh: {
               type: 'boolean',
@@ -242,14 +249,23 @@ class DocsNavigatorServer {
     // Search for relevant documentation
     const searchResults = await this.vectorService.search(question, 'all', 5);
 
-    // Generate answer using AI with context
-    const answer = await this.aiService.answerQuestion(question, searchResults, context);
+    // Generate answer using AI with context. Without a reachable model, return the passages instead.
+    let text;
+    try {
+      text = await this.aiService.answerQuestion(question, searchResults, context);
+    } catch (error) {
+      text =
+        'No AI model answered, so here are the best matching passages instead.\n\n' +
+        searchResults
+          .map((r, i) => `[${i + 1}] ${r.metadata.title} - ${r.metadata.url}\n${r.content}`)
+          .join('\n\n---\n\n');
+    }
 
     return {
       content: [
         {
           type: 'text',
-          text: answer,
+          text,
         },
       ],
     };

@@ -3,6 +3,7 @@ import * as cheerio from 'cheerio';
 import TurndownService from 'turndown';
 import { VectorService } from './vector-service.js';
 import { CacheService } from './cache-service.js';
+import { fetchSitemapUrls, rankUrls } from '../utils/sitemap.js';
 import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
@@ -558,29 +559,11 @@ export class DocumentationService {
     const urlData = [];
 
     try {
-      // Try to fetch sitemap
-      const sitemapUrl = `${source.baseUrl}/sitemap.xml`;
-      const response = await axios.get(sitemapUrl, { timeout: 10000 });
-      const $ = cheerio.load(response.data, { xmlMode: true });
-      
-      $('url').each((_, element) => {
-        const $url = $(element);
-        const loc = $url.find('loc').text();
-        const lastmod = $url.find('lastmod').text(); // May be empty if not present
-        
-        // Filter out blog posts, archives, and search pages
-        if (loc && 
-            !loc.includes('/blog') && 
-            !loc.includes('/archive') && 
-            !loc.includes('/search') &&
-            !loc.includes('/tags/') &&
-            !loc.includes('/authors')) {
-          urlData.push({
-            url: loc,
-            lastmod: lastmod ? new Date(lastmod).getTime() : null,
-          });
-        }
-      });
+      // Try the sitemap (docs path, then site root; sitemap indexes are followed)
+      const ranked = rankUrls(await fetchSitemapUrls(source.baseUrl), source.baseUrl);
+      for (const { url, lastmod } of ranked) {
+        urlData.push({ url, lastmod: lastmod ? new Date(lastmod).getTime() : null });
+      }
 
       if (urlData.length === 0) {
         console.warn(`No valid URLs found in sitemap for ${source.name}, using fallback`);

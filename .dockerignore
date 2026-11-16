@@ -1,0 +1,9 @@
+node_modules
+data
+.git
+.github
+docs
+assets
+public
+scripts
+.env

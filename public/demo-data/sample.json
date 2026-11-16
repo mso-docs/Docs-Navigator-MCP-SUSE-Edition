@@ -1,0 +1,19 @@
+{
+  "question": "How do I quickly install K3s?",
+  "mode": "extract",
+  "answer": "This guide will help you quickly launch a cluster with default options. Make sure your nodes meet the requirements before proceeding.\n\n*   Consult the Installation page for greater detail on installing and configuring K3s.\n*   For information on how K3s components work together, refer to the Architecture page.\n*   If you are new to Kubernetes, the official Kubernetes docs have great tutorials covering basics that all cluster administrators should be familiar with.\n\n## Install Script​\n\nK3s provides an installation script that is a convenient way to install it as a service on systemd or openrc based systems. This script is available at https://get.k3s.io. To install K3s using this method, just run:\n\n```\ncurl -sfL https://get.k3s.io | sh -\n```\n\nAfter running this installation:\n\n*   The K3s service will be configured to automatically restart after node reboots or if the process crashes or is killed\n*   Additional utilities will be installed, including `kubectl`, `crictl`, `ctr`, `k3s-killall.sh`, and `k3s-uninstall.sh`",
+  "sources": [
+    {
+      "url": "https://docs.k3s.io/quick-start",
+      "title": "Quick-Start Guide"
+    },
+    {
+      "url": "https://docs.k3s.io/installation/airgap",
+      "title": "Air-Gap Install"
+    },
+    {
+      "url": "https://docs.k3s.io/installation/configuration",
+      "title": "Configuration Options"
+    }
+  ]
+}

@@ -36,7 +36,11 @@ app.get('/api/health', async (req, res) => {
   res.json({
     status: 'ok',
     aiService: aiAvailable ? 'available' : 'unavailable',
-    provider: process.env.AI_PROVIDER || 'ollama',
+    provider: aiService.provider,
+    model: aiService.provider === 'none' ? null : aiService.model,
+    searchMode: vectorService.searchMode,
+    indexedChunks: vectorService.lexical.count(),
+    mode: 'server',
   });
 });
 
@@ -78,10 +82,18 @@ app.post('/api/ask', async (req, res) => {
     // Search for relevant documentation
     const searchResults = await vectorService.search(question, 'all', 5);
     
-    // Generate answer using AI
-    const answer = await aiService.answerQuestion(question, searchResults, context);
-    
-    res.json({ answer, sources: searchResults });
+    // Generate answer using AI. If no model is reachable, still return the passages.
+    try {
+      const answer = await aiService.answerQuestion(question, searchResults, context);
+      res.json({ answer, sources: searchResults });
+    } catch (aiError) {
+      console.error('AI answer failed:', String(aiError));
+      res.json({
+        answer: null,
+        sources: searchResults,
+        note: 'No AI model answered, so these are the best matching passages from the docs.',
+      });
+    }
   } catch (error) {
     res.status(500).json({ error: String(error) });
   }
@@ -183,7 +195,8 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
   console.log(`\n🚀 SUSE Docs Navigator Web UI running at http://localhost:${PORT}`);
   console.log(`\nConfiguration:`);
-  console.log(`  AI Provider: ${process.env.AI_PROVIDER || 'ollama'}`);
-  console.log(`  Model: ${process.env.OLLAMA_MODEL || 'llama3.2:latest'}`);
+  console.log(`  AI Provider: ${aiService.provider}`);
+  console.log(`  Model: ${aiService.provider === 'none' ? '(none, search only)' : aiService.model}`);
+  console.log(`  Search mode: ${vectorService.searchMode}`);
   console.log(`\nOpen http://localhost:${PORT} in your browser to get started!\n`);
 });

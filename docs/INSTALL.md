@@ -4,7 +4,7 @@ Follow these steps to set up the SUSE Docs Navigator MCP Server.
 
 ## Prerequisites
 
-1. **Node.js** (v18 or higher)
+1. **Node.js** (v22 or higher)
 2. **Ollama** (for local open-source AI models) - Download from [ollama.ai](https://ollama.ai)
 3. **Git**
 
