@@ -4,10 +4,13 @@ Search SUSE, Rancher, K3s, RKE2, Longhorn, Harvester, NeuVector, and Kubewarden 
 
 > **Not an official SUSE product.** This is an independent community project. SUSE, Rancher, and the chameleon are trademarks of SUSE LLC.
 
-- **Live demo:** [mso-docs.github.io/Docs-Navigator-MCP-SUSE-Edition](https://mso-docs.github.io/Docs-Navigator-MCP-SUSE-Edition/). It is a static page that searches a snapshot of the docs in your browser.
+- **Project page / live demo:** [mso-docs.github.io/Docs-Navigator-MCP-SUSE-Edition](https://mso-docs.github.io/Docs-Navigator-MCP-SUSE-Edition/). It is a static page that searches a snapshot of the docs in your browser.
+- **Updated Space:** [mackenzietechdocs/DocsNavigatorMCP-SUSE](https://huggingface.co/spaces/mackenzietechdocs/DocsNavigatorMCP-SUSE)
+- **Hack Week 25 Space (frozen):** [mackenzietechdocs/DocsNavigatorMCP-SUSE-hackathon](https://huggingface.co/spaces/mackenzietechdocs/DocsNavigatorMCP-SUSE-hackathon)
+- **Collection:** [Docs Navigator SUSE](https://huggingface.co/collections/mackenzietechdocs/docs-navigator-suse)
 - **Directory listing:** [Glama](https://glama.ai/mcp/servers/mso-docs/Docs-Navigator-MCP-SUSE-Edition)
 - **Portfolio:** [mso-docs.github.io/mac-portfolio](https://mso-docs.github.io/mac-portfolio/)
-- **Hack Week version:** the version submitted for SUSE Hack Week 25 (December 1–5, 2025) is preserved on the [`hackathon-submission`](https://github.com/mso-docs/Docs-Navigator-MCP-SUSE-Edition/tree/hackathon-submission) branch.
+- **Hack Week GitHub branch:** the version submitted for SUSE Hack Week 25 (December 1–5, 2025) is also preserved on the [`hackathon-submission`](https://github.com/mso-docs/Docs-Navigator-MCP-SUSE-Edition/tree/hackathon-submission) branch.
 
 ![SUSE Docs Navigator](assets/docs-nav-suse.png)
 
